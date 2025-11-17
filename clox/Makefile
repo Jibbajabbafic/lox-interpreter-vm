@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 TARGET = bin/lox
-SOURCES = main.c chunk.c memory.c
+SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
 
 all: $(TARGET)
