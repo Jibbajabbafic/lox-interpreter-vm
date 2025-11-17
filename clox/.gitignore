@@ -1,0 +1,85 @@
+# Compiled object files
+*.o
+*.obj
+*.lo
+*.la
+*.pch
+*.gch
+
+# Libraries
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Executables and temporary binaries
+*.exe
+*.out
+a.out
+*.elf
+/bin/
+/build/
+/dist/
+
+# Debug and crash files
+*.dSYM/
+*.pdb
+*.idb
+*.stackdump
+core
+*.su
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+lcov.info
+
+# CMake generated files and folders
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile.d
+compile_commands.json
+
+# Autotools
+config.log
+config.status
+config.cache
+autom4te.cache/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+.project
+.settings/
+*.code-workspace
+
+# Vim / swap files, backups
+*~
+*.swp
+*.swo
+.*.swp
+
+# Tags and cscope
+tags
+TAGS
+cscope.*
+cscope.files
+
+# Misc OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Ignore generated files commonly created by build scripts
+*.generated
