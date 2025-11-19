@@ -7,6 +7,7 @@ OBJECTS = $(SOURCES:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
 
 %.o: %.c
