@@ -6,5 +6,11 @@
 		{
 			"path": "../clox"
 		}
-	]
+	],
+	"settings": {
+		"github.copilot.enable": {
+			"c": false
+		},
+		"editor.formatOnSave": false,
+	}
 }
