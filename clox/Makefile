@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
-TARGET = bin/lox
+TARGET = bin/clox
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
 
