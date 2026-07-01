@@ -95,6 +95,15 @@ static InterpretResult run() {
         printf("\n");
         disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
+#ifdef DEBUG_PRINT_INTERNED_STRINGS
+        printf("string count: %0d\n", vm.strings.count);
+        for (int idx = 0; idx < vm.strings.capacity; idx++) {
+            Entry* entry = &vm.strings.entries[idx];
+            if (entry->key != NULL) {
+                printf("%d: %s\n", idx, entry->key->chars);
+            }
+        }
+#endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_CONSTANT: {
