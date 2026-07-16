@@ -16,6 +16,8 @@ typedef struct {
     Value stack[STACK_MAX];
     // Pointer to the next empty slot on the stack
     Value* stackTop;
+    // Hashtable of all global variables
+    Table globals;
     // Hashtable of all "interned" strings being used
     Table strings;
     // Head of the linked list of objects (for freeing all memory)
