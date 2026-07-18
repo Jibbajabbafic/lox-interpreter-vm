@@ -100,6 +100,8 @@ static void consume(TokenType type, const char* message) {
         advance();
         return;
     }
+
+    errorAtCurrent(message);
 }
 
 static bool check(TokenType type) {

@@ -104,6 +104,8 @@ static TokenType checkKeyword(int start, int length,
         memcmp(scanner.start + start, rest, length) == 0) {
         return type;
     }
+
+    return TOKEN_IDENTIFIER;
 }
 
 static TokenType identifierType() {
@@ -137,6 +139,7 @@ static TokenType identifierType() {
         case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
         case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
     }
+
     return TOKEN_IDENTIFIER;
 }
 
