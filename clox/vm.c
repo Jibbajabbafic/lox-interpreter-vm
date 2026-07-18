@@ -89,9 +89,13 @@ static InterpretResult run() {
         push(valueType(a op b)); \
     } while (false)
 
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("== run  ==\n");
+#endif
+
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
-        printf("        | ");
+        printf("          ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
             printf("[ ");
             printValue(*slot);
