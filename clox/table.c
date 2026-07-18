@@ -50,11 +50,11 @@ static Entry* findEntry(
 bool tableGet(Table* table, ObjString* key, Value* value) {
     if (table->count == 0) return false;
 
-     Entry* entry = findEntry(table->entries, table->capacity, key);
-     if (entry->key == NULL) return false;
+    Entry* entry = findEntry(table->entries, table->capacity, key);
+    if (entry->key == NULL) return false;
 
-     *value = entry->value;
-     return false;
+    *value = entry->value;
+    return true;
 }
 
 static void adjustCapacity(Table* table, int capacity) {
