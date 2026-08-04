@@ -1,3 +1,6 @@
+# Script for testing changes
+test.lox
+
 # Compiled object files
 *.o
 *.obj

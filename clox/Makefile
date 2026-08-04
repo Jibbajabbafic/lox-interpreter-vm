@@ -14,7 +14,10 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -c $<
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) $(filter-out $@,$(MAKECMDGOALS))
+
+%:
+	@:
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
