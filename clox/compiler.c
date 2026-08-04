@@ -59,6 +59,7 @@ typedef struct {
     // Stores the local variables using indexes in an array
     Local locals[UINT8_COUNT];
     int localCount;
+    // Tracks current scope depth for popping locals
     int scopeDepth;
 } Compiler;
 
@@ -211,10 +212,13 @@ static ObjFunction* endCompiler() {
     return function;
 }
 
+// Begin a new scope by incrementing the scope depth.
+// Used to track which scopes to pop later on
 static void beginScope() {
     current->scopeDepth++;
 }
 
+// Ends the scope and pops all values that were within that depth
 static void endScope() {
     current->scopeDepth--;
 
@@ -294,7 +298,11 @@ static uint8_t parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
+// Marks when a var is fully initialized to stop it being read during
+// its own initializer expression
 static void markInitialized() {
+    if (current->scopeDepth == 0) return;
+    // depth is -1 when uninitialized - set it to mark it
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -490,6 +498,29 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expected '}' after block.");
 }
 
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expected '(' after function name.");
+    consume(TOKEN_RIGHT_PAREN, "Expected ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expected '{' before function body.");
+    // Will take care of the closing right brace
+    block();
+
+    // No need for endScope as we end the compile here
+    ObjFunction* function = endCompiler();
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expected function name.");
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
+}
+
 static void varDeclaration() {
     uint8_t global = parseVariable("Expected variable name.");
 
@@ -621,7 +652,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();
