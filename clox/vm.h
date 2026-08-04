@@ -1,18 +1,30 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
-#include "chunk.h"
+#include "object.h"
 #include "table.h"
 #include "value.h"
 
-#define STACK_MAX 256
+// Max function call stack depth
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-    // Currently loaded chunk
-    Chunk* chunk;
-    // Instruction pointer
+    // Pointer back to the function this is associated with
+    ObjFunction* function;
+    // Next bytecode instruction to execute in this function’s chunk
     uint8_t* ip;
-    // Value stack
+    // Base pointer into the VM's value stack for this call frame
+    Value* slots;
+} CallFrame;
+
+typedef struct {
+    // Stack of call frames
+    CallFrame frames[FRAMES_MAX];
+    // Number of ongoing function calls
+    int frameCount;
+
+    // Global value stack for all stack values
     Value stack[STACK_MAX];
     // Pointer to the next empty slot on the stack
     Value* stackTop;

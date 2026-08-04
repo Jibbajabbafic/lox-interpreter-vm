@@ -32,10 +32,16 @@ typedef enum {
 } OpCode;
 
 typedef struct {
+    // Number of total bytes currently used
     int count;
+    // Allocated size of code in bytes
     int capacity;
+    // Array of instruction bytecode from this chunk
+    // Each entry is either an opcode or operand for a previous opcode
     uint8_t* code;
+    // Source code lines which map to the bytecode for error reporting
     int* lines;
+    // Array of constants referenced by the bytecode (e.g. OP_CONSTANT index)
     ValueArray constants;
 } Chunk;
 
