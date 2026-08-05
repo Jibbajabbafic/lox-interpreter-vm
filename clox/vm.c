@@ -44,20 +44,59 @@ void freeVM() {
     freeObjects();
 }
 
+// Adds a value to the stack and moves the stackTop up one.
 void push(Value value) {
     *vm.stackTop = value;
     vm.stackTop++;
 }
 
+// Removes a value from the top of the stack and returns it.
+// Moves the stackTop down one.
 Value pop() {
     vm.stackTop--;
     return *vm.stackTop;
 }
 
+// Reads the values on the VM stack from the top (0 = top, 1 = one below, etc.).
+// Does not pop the values.
 static Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
+static bool call(ObjFunction* function, int argCount) {
+    if (argCount != function->arity) {
+        runtimeError("Expected %d arguments but got %d.",
+            function->arity,
+            argCount
+        );
+    }
+
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Stack overflow.");
+        return false;
+    }
+
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stackTop - argCount -1;
+    return true;
+}
+
+static bool callValue(Value callee, int argCount) {
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+            case OBJ_FUNCTION:
+                return call(AS_FUNCTION(callee), argCount);
+            default:
+                break; // Non-callable object type
+        }
+    }
+    runtimeError("Can only call functions and classes.");
+    return false;
+}
+
+// Determines if a value evaluates to False when converted to a boolean
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
@@ -230,6 +269,17 @@ static InterpretResult run() {
                 frame->ip -= offset;
                 break;
             }
+            case OP_CALL: {
+                int argCount = READ_BYTE();
+                // Find the function on the stack using argCount and call it
+                // We know it must be before all provided args
+                if (!callValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                // Move back to the previous frame after calling
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
             case OP_RETURN: {
                 // Exit the interpreter
                 return INTERPRET_OK;
@@ -249,10 +299,7 @@ InterpretResult interpret(const char* source) {
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
 
     push(OBJ_VAL(function));
-    CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
-    frame->slots = vm.stack;
+    call(function, 0);
 
     return run();
 }

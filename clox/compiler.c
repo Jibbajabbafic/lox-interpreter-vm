@@ -11,7 +11,9 @@
 #endif
 
 typedef struct {
+    // Current token
     Token current;
+    // Previous token
     Token previous;
     bool hadError;
     bool panicMode;
@@ -52,7 +54,8 @@ typedef enum {
 } FunctionType;
 
 
-typedef struct {
+typedef struct Compiler {
+    struct Compiler* enclosing;
     ObjFunction* function;
     FunctionType type;
 
@@ -95,6 +98,7 @@ static void errorAtCurrent(const char* message) {
     errorAt(&parser.current, message);
 }
 
+// Progresses the parser to the next token
 static void advance() {
     parser.previous = parser.current;
 
@@ -106,6 +110,7 @@ static void advance() {
     }
 }
 
+// Checks the current token type and advances if it matches - otherwise errors
 static void consume(TokenType type, const char* message) {
     if (parser.current.type == type) {
         advance();
@@ -115,20 +120,25 @@ static void consume(TokenType type, const char* message) {
     errorAtCurrent(message);
 }
 
+// Returns true if the current token type matches without advancing - no errors
 static bool check(TokenType type) {
     return parser.current.type == type;
 }
 
+// Returns true if the current token type matches and advances - no errors
 static bool match(TokenType type) {
     if (!check(type)) return false;
     advance();
     return true;
 }
 
+// Writes a byte into the current chunk
 static void emitByte(uint8_t byte) {
     writeChunk(currentChunk(), byte, parser.previous.line);
 }
 
+
+// Writes two bytes into the current chunk
 static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte1);
     emitByte(byte2);
@@ -184,12 +194,19 @@ static void patchJump(int offset) {
 }
 
 static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;
     compiler->function = NULL;
     compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->function = newFunction();
     current = compiler;
+    if (type != TYPE_SCRIPT) {
+        current->function->name = copyString(
+            parser.previous.start,
+            parser.previous.length
+        );
+    }
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
@@ -209,6 +226,7 @@ static ObjFunction* endCompiler() {
     }
 #endif
 
+    current = current->enclosing;
     return function;
 }
 
@@ -314,6 +332,21 @@ static void defineVariable(uint8_t global) {
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+            if (argCount == 255) {
+                error("Can't have more than 255 arguments.");
+            }
+            argCount++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expected ')' after arguments.");
+    return argCount;
+}
+
 static void and_(bool canAssign) {
     int endJump = emitJump(OP_JUMP_IF_FALSE);
 
@@ -341,6 +374,11 @@ static void binary(bool canAssign) {
         case TOKEN_SLASH:         emitByte(OP_DIVIDE); break;
         default: return; // Unreachable
     }
+}
+
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();
+    emitBytes(OP_CALL, argCount);
 }
 
 static void literal(bool canAssign) {
@@ -418,7 +456,7 @@ static void unary(bool canAssign) {
 }
 
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
+    [TOKEN_LEFT_PAREN]    = {grouping, call,   PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,   PREC_NONE},
@@ -504,6 +542,16 @@ static void function(FunctionType type) {
     beginScope();
 
     consume(TOKEN_LEFT_PAREN, "Expected '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            uint8_t constant = parseVariable("Expected parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
     consume(TOKEN_RIGHT_PAREN, "Expected ')' after parameters.");
     consume(TOKEN_LEFT_BRACE, "Expected '{' before function body.");
     // Will take care of the closing right brace
