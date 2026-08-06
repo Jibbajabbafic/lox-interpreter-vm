@@ -10,8 +10,8 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-    // Pointer back to the function this is associated with
-    ObjFunction* function;
+    // Pointer back to the function closure this is associated with
+    ObjClosure* closure;
     // Next bytecode instruction to execute in this function’s chunk
     uint8_t* ip;
     // Base pointer into the VM's value stack for this call frame
