@@ -1,5 +1,8 @@
 CC = gcc
+# Debug flags
 CFLAGS = -Wall -Wextra -g
+# Optimized flags
+# CFLAGS = -Wall -Wextra -O3
 TARGET = bin/clox
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
