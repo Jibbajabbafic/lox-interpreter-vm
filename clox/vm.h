@@ -35,6 +35,11 @@ typedef struct {
     // Head of the linked list of 'open' upvalue pointers for closing
     // Searched to ensure we don't duplicate upvalues
     ObjUpvalue* openUpvalues;
+
+    // Track the total bytes of managed memory for the GC
+    size_t bytesAllocated;
+    // Byte threshold which triggers the GC
+    size_t nextGC;
     // Head of linked list of all objects.
     // Used to free memory with the GC and when the VM exits.
     Obj* objects;
