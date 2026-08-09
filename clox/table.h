@@ -27,5 +27,6 @@ ObjString* tableFindString(
     int length,
     uint32_t hash
 );
+void markTable(Table* table);
 
 #endif
