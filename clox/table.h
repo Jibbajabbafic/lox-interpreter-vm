@@ -27,6 +27,8 @@ ObjString* tableFindString(
     int length,
     uint32_t hash
 );
+
+void tableRemoveWhite(Table* table);
 void markTable(Table* table);
 
 #endif

@@ -35,7 +35,8 @@ typedef struct {
     // Head of the linked list of 'open' upvalue pointers for closing
     // Searched to ensure we don't duplicate upvalues
     ObjUpvalue* openUpvalues;
-    // Head of the linked list of objects (for freeing all memory)
+    // Head of linked list of all objects.
+    // Used to free memory with the GC and when the VM exits.
     Obj* objects;
     // Garbage Collector vars
     // Count of gray marked objects
