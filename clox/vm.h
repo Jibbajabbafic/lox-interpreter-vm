@@ -37,6 +37,13 @@ typedef struct {
     ObjUpvalue* openUpvalues;
     // Head of the linked list of objects (for freeing all memory)
     Obj* objects;
+    // Garbage Collector vars
+    // Count of gray marked objects
+    int grayCount;
+    // Capacity of our gray object array
+    int grayCapacity;
+    // Stack of gray marked objects for the GC to work through
+    Obj** grayStack;
 } VM;
 
 typedef enum {

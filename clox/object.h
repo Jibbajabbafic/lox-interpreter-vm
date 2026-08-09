@@ -58,6 +58,7 @@ typedef struct ObjUpvalue {
     Obj obj;
     // Points to where the actual value lives in memory
     Value* location;
+    // The stored value of a 'closed' upvalue
     Value closed;
     struct ObjUpvalue* next;
 } ObjUpvalue;
