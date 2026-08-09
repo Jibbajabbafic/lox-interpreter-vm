@@ -55,7 +55,10 @@ struct ObjString {
 
 typedef struct ObjUpvalue {
     Obj obj;
+    // Points to where the actual value lives in memory
     Value* location;
+    Value closed;
+    struct ObjUpvalue* next;
 } ObjUpvalue;
 
 typedef struct {

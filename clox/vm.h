@@ -32,6 +32,9 @@ typedef struct {
     Table globals;
     // Hashtable of all "interned" strings being used
     Table strings;
+    // Head of the linked list of 'open' upvalue pointers for closing
+    // Searched to ensure we don't duplicate upvalues
+    ObjUpvalue* openUpvalues;
     // Head of the linked list of objects (for freeing all memory)
     Obj* objects;
 } VM;

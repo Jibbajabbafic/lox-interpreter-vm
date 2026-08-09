@@ -19,6 +19,7 @@ static Value clockNative(int argCount, Value* args) {
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
+    vm.openUpvalues = NULL;
 }
 
 static void runtimeError(const char* format, ...) {
@@ -133,9 +134,50 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+// Capture a local variable slot as an upvalue.
+// Reuse an existing open upvalue for the same slot if present.
+// Open upvalues are kept sorted by descending stack slot address,
+// so we can stop once current->location <= local and insert there.
 static ObjUpvalue* captureUpvalue(Value* local) {
+    ObjUpvalue* prevUpvalue = NULL;
+    ObjUpvalue* upvalue = vm.openUpvalues;
+    // Search through linked list to find existing upvalue location addresses
+    // List is kept in descending order, so if we go beyond existing locations
+    // then we need to insert the value there to maintain the list order
+    while (upvalue != NULL && upvalue->location > local) {
+        prevUpvalue = upvalue;
+        upvalue = upvalue->next;
+    }
+
+    if (upvalue != NULL && upvalue->location == local) {
+        // Found existing upvalue with the same location address
+        return upvalue;
+    }
+
     ObjUpvalue* createdUpvalue = newUpvalue(local);
+    // Add to linked list
+    createdUpvalue->next = upvalue;
+
+    if (prevUpvalue == NULL) {
+        vm.openUpvalues = createdUpvalue;
+    } else {
+        prevUpvalue->next = createdUpvalue;
+    }
     return createdUpvalue;
+}
+
+// Searches all currently open upvalues and closes them from a certain point
+// to ensure the Value is not lost
+static void closeUpvalues(Value* last) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+        ObjUpvalue* upvalue = vm.openUpvalues;
+        // Copy the actual Value, pointed to by location, into ObjUpvalue
+        // ObjUpvalue already lives on the heap, so now the Value does too!
+        upvalue->closed = *upvalue->location;
+        // Now make location point to the Value in the ObjUpvalue
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues = upvalue->next;
+    }
 }
 
 // Determines if a value evaluates to False when converted to a boolean
@@ -348,8 +390,15 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_CLOSE_UPVALUE:
+                closeUpvalues(vm.stackTop -1);
+                pop();
+                break;
             case OP_RETURN: {
                 Value result = pop();
+                // Ensure we capture any local variables needed by closures
+                // before throwing them all away
+                closeUpvalues(frame->slots);
                 vm.frameCount--;
                 if (vm.frameCount == 0) {
                     pop();
