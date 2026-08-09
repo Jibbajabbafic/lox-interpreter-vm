@@ -62,7 +62,12 @@ static ObjString* allocateString(
     string->length = length;
     string->chars = chars;
     string->hash = hash;
+
+    // Must put string on stack to stop GC freeing it during tableSet
+    push(OBJ_VAL(string));
     tableSet(&vm.strings, string, NIL_VAL);
+    pop();
+
     return string;
 }
 
