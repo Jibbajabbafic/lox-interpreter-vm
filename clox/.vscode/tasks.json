@@ -10,9 +10,19 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
             },
             "detail": "Builds the full clox interpreter."
+        },
+        {
+            "label": "run clox",
+            "type": "shell",
+            "command": "make run",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Runs the clox interpreter."
         }
     ]
 }
