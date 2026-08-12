@@ -274,6 +274,8 @@ static void declaration();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
+// Creates a constant in the current chunk from a token, and returns the
+// index of it in the constant table
 static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start,
         name->length)));
@@ -633,6 +635,18 @@ static void function(FunctionType type) {
     }
 }
 
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "Expected class name.");
+    uint8_t nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitBytes(OP_CLASS, nameConstant);
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "Expected '{' before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expected '}' before class body.");
+}
+
 static void funDeclaration() {
     uint8_t global = parseVariable("Expected function name.");
     markInitialized();
@@ -785,7 +799,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FUN)) {
         funDeclaration();
     } else if (match(TOKEN_VAR)) {
         varDeclaration();
