@@ -1,0 +1,2 @@
+Times to run bench.lox in seconds.
+Initial: 3.08597
