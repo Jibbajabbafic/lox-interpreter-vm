@@ -110,6 +110,9 @@ bool tableDelete(Table* table, ObjString* key) {
     return true;
 }
 
+// Copies all entries from one table to another.
+// Values are shallow copies - if value points to an object both tables will
+// reference the same object in memory
 void tableAddAll(Table* from, Table* to) {
     for (int i = 0; i < from->capacity; i++) {
         Entry* entry = &from->entries[i];
