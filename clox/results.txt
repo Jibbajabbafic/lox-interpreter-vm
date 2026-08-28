@@ -1,2 +1,3 @@
 Times to run bench.lox in seconds.
 Initial: 3.08597
+Faster hash table probing: 2.58883
