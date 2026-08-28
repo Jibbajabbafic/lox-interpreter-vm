@@ -296,8 +296,7 @@ static void parsePrecedence(Precedence precedence);
 // Creates a constant in the current chunk from a token, and returns the
 // index of it in the constant table
 static uint8_t identifierConstant(Token* name) {
-    return makeConstant(OBJ_VAL(copyString(name->start,
-        name->length)));
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
 static bool identifiersEqual(Token* a, Token* b) {
@@ -305,6 +304,7 @@ static bool identifiersEqual(Token* a, Token* b) {
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
+// Returns the index of the local variable in the locals array, otherwise -1
 static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
@@ -516,6 +516,10 @@ static void string(bool canAssign) {
                                     parser.previous.length - 2)));
 }
 
+// Sets or gets the value of a named variable.
+// Determines if the variable is a local, upvalue (closure), or global, and
+// finds the index of the variable in the appropriate table. Then emits the
+// correct instruction with the index.
 static void namedVariable(Token name, bool canAssign) {
     uint8_t getOp, setOp;
     int arg = resolveLocal(current, &name);
@@ -548,6 +552,32 @@ static Token syntheticToken(const char* text) {
     token.start = text;
     token.length = (int)strlen(text);
     return token;
+}
+
+static void super_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'super' outside of a class.");
+    } else if (!currentClass->hasSuperclass) {
+        error("Can't use 'super' in a class with no superclass.");
+    }
+
+    consume(TOKEN_DOT, "Expected '.' after 'super'.");
+    consume(TOKEN_IDENTIFIER, "Expected superclass method name.");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    // Loads the current class instance onto the stack
+    namedVariable(syntheticToken("this"), false);
+    if (match(TOKEN_LEFT_PAREN)) {
+        // Calling the super method straight away - invoke it directly
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        // Loads the superclass onto the stack
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, name);
+    }
 }
 
 static void this_(bool canAssign) {
@@ -606,7 +636,7 @@ ParseRule rules[] = {
     [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_SUPER]         = {super_,   NULL,   PREC_NONE},
     [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},

@@ -193,6 +193,8 @@ static bool invoke(ObjString* name, int argCount) {
     return invokeFromClass(instance->klass, name, argCount);
 }
 
+// Finds the method from the class by name, and creates a bound method which
+// contains the receiver (instance) and the method closure
 static bool bindMethod(ObjClass* klass, ObjString* name) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
@@ -427,6 +429,15 @@ static InterpretResult run() {
                 push(value);
                 break;
             }
+            case OP_GET_SUPER: {
+                ObjString* name = READ_STRING();
+                ObjClass* superclass = AS_CLASS(pop());
+
+                if (!bindMethod(superclass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -501,6 +512,16 @@ static InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 // Move back to the previous frame after invoke
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            case OP_SUPER_INVOKE: {
+                ObjString* method = READ_STRING();
+                int argCount = READ_BYTE();
+                ObjClass* superclass = AS_CLASS(pop());
+                if (!invokeFromClass(superclass, method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
