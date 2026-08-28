@@ -1,0 +1,3 @@
+Results for the time and work benchmarks in each version
+Initial: 3.08597
+Faster hash table probing: 2.58883s, 6456 batches

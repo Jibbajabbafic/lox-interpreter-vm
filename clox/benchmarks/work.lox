@@ -1,0 +1,44 @@
+// Let's see if our fixes were worth it.
+// Counts how many batches of 10,000 method calls we can run in 10 seconds.
+// More batches equals faster performance.
+
+class Zoo {
+  init() {
+    this.aardvark = 1;
+    this.baboon   = 1;
+    this.cat      = 1;
+    this.donkey   = 1;
+    this.elephant = 1;
+    this.fox      = 1;
+  }
+  ant()    { return this.aardvark; }
+  banana() { return this.baboon; }
+  tuna()   { return this.cat; }
+  hay()    { return this.donkey; }
+  grass()  { return this.elephant; }
+  mouse()  { return this.fox; }
+}
+
+var zoo = Zoo();
+var batches = 0;
+var start = clock();
+var elapsed = 0;
+
+while (elapsed < 10) {
+  // Run 10,000 method calls per batch
+  for (var i = 0; i < 10000; i = i + 1) {
+    var sum = zoo.ant()
+            + zoo.banana()
+            + zoo.tuna()
+            + zoo.hay()
+            + zoo.grass()
+            + zoo.mouse();
+  }
+  batches = batches + 1;
+  elapsed = clock() - start;
+}
+
+print "Batches completed in 10 seconds: ";
+print batches;
+print "Elapsed time: ";
+print elapsed;

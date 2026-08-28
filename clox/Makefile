@@ -18,10 +18,15 @@ run: $(TARGET)
 	./$(TARGET) $(filter-out $@,$(MAKECMDGOALS))
 
 # Optimized flags
-bench: CFLAGS = -Wall -Wextra -O3 -march=native -flto
-# Run the benchmark file with optimized flags
-bench: clean $(TARGET)
-	./$(TARGET) bench.lox
+bench-time: CFLAGS = -Wall -Wextra -O3 -march=native -flto
+# Run the time benchmark file with optimized flags
+bench-time: clean $(TARGET)
+	./$(TARGET) benchmarks/time.lox
+# Optimized flags
+bench-work: CFLAGS = -Wall -Wextra -O3 -march=native -flto
+# Run the work benchmark file with optimized flags
+bench-work: clean $(TARGET)
+	./$(TARGET) benchmarks/work.lox
 
 %:
 	@:
@@ -29,4 +34,4 @@ bench: clean $(TARGET)
 clean:
 	rm -f $(OBJECTS) $(TARGET)
 
-.PHONY: all run bench clean
+.PHONY: all run bench-time bench-work clean
